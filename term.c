@@ -31,6 +31,9 @@ static void restore_and_exit(int signal_number) {
 }
 
 void term_init(int animate, int color) {
+    // On Windows a console stdout is unbuffered: every putchar would be its own console call (very slow).
+    // Buffer it all; main flushes after each frame.
+    setvbuf(stdout, NULL, _IOFBF, 1 << 20);
 #ifdef _WIN32
     if (animate || color) {
         DWORD mode;

@@ -16,6 +16,8 @@
 #include "render.h"
 #include "term.h"
 
+#define RESIZE_POLL_MS 100                          // with -f on a still image: how often to check the window size
+
 // Everything that can be chosen from the command line
 struct options {
     const char *input_path;
@@ -36,7 +38,7 @@ static void print_usage(const char *program) {
     fprintf(stderr,
         "usage: %s [-c] [-f] img [style] [columns] [edge threshold / shape contrast] [subject 1/0] [subject threshold 0..1]\n"
         "-c: color each character with the average color of the image under it (truecolor ANSI)\n"
-        "-f: fill the terminal and follow window resizes (ignores columns)\n"
+        "-f: fill the terminal and follow window resizes until Ctrl+C, still images too (ignores columns)\n"
         "styles: symbols (default), skull, shapes, edges\n"
         "subject threshold: default 0.5, lower = looser crop (keeps dark clothes)\n"
         "animated GIFs and videos: loop until Ctrl+C (when writing to a file, each frame once)\n"
@@ -158,8 +160,10 @@ int main(int argc, char **argv) {
     int block_h = block_w * 2;
 
     // Animation in the terminal: each frame is drawn over the previous one, until Ctrl+C.
-    // To a file (or for a still image) each frame is written only once.
-    int animate = frame_count > 1 && isatty(1);
+    // With -f a still image stays on screen too, redrawn when the window is resized.
+    // To a file (or for a still image without -f) each frame is written only once.
+    int term_cols, term_rows;
+    int animate = isatty(1) && (frame_count > 1 || (opt.fit_screen && term_size(&term_cols, &term_rows)));
     term_init(animate, opt.style.color);
 
     int *fit_luma = NULL;                           // with -f: the frame resampled to the terminal size
@@ -173,11 +177,16 @@ int main(int argc, char **argv) {
         int draw_block_w = block_w, draw_block_h = block_h;
         int pad_left = 0, pad_top = 0;
 
-        int term_cols, term_rows;
         int fit = opt.fit_screen && term_size(&term_cols, &term_rows);
         if (fit) {
+            int resized = term_cols != last_term_cols || term_rows != last_term_rows;
+            // A still image only needs drawing again when the window changes size
+            if (animate && frame_count == 1 && !resized) {
+                usleep(RESIZE_POLL_MS * 1000);
+                continue;
+            }
             // The window changed (or this is the first frame): clear it, or pieces of the old drawing stay behind
-            if (term_cols != last_term_cols || term_rows != last_term_rows) printf("\033[2J");
+            if (resized) printf("\033[2J");
             last_term_cols = term_cols;
             last_term_rows = term_rows;
 
@@ -206,6 +215,7 @@ int main(int argc, char **argv) {
             continue;
         }
         fflush(stdout);
+        if (frame_count == 1) continue;             // still image: the next pass waits for a resize
         // Like browsers do: a delay under 20 ms counts as 100 ms
         int delay_ms = frame_delays_ms[f] < 20 ? 100 : frame_delays_ms[f];
         usleep(delay_ms * 1000);

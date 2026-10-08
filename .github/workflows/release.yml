@@ -16,7 +16,7 @@ jobs:
       - name: Build
         run: |
           curl -sSL -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v$ORT_VERSION/onnxruntime-linux-x64-$ORT_VERSION.tgz
-          mkdir onnxruntime && tar xzf ort.tgz -C onnxruntime --strip-components=1
+          tar xzf ort.tgz && mv onnxruntime-linux-x64-$ORT_VERSION onnxruntime
           # rpath $ORIGIN: libonnxruntime.so.1 is looked up next to the executable
           make CC=gcc ORT=onnxruntime LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'"
       - name: Package
@@ -37,7 +37,8 @@ jobs:
       - name: Build
         run: |
           curl -sSL -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v$ORT_VERSION/onnxruntime-osx-arm64-$ORT_VERSION.tgz
-          mkdir onnxruntime && tar xzf ort.tgz -C onnxruntime --strip-components=1
+          # the macOS tarball's paths start with ./, so --strip-components=1 would strip only the "."
+          tar xzf ort.tgz && mv onnxruntime-osx-arm64-$ORT_VERSION onnxruntime
           make ORT=onnxruntime LDFLAGS="-Wl,-rpath,@executable_path"
       - name: Package
         run: |

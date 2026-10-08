@@ -48,7 +48,7 @@ main [-c] [-f] img [style] [columns] [edge threshold / shape contrast] [subject 
 ```
 
 - **-c**: color each character with the average color of the image under it (24-bit ANSI, any position)
-- **-f**: fill the terminal (width and height, keeping proportions, centered) and follow window resizes; ignores columns. When output is not a terminal it falls back to columns
+- **-f**: fill the terminal (width and height, keeping proportions, centered) and follow window resizes until Ctrl+C, still images too; ignores columns. When output is not a terminal it falls back to columns
 - **style**: `symbols` (default), `skull`, `shapes`, `edges`
 - **columns**: drawing width in characters (default 100)
 - **threshold/contrast**: for `edges` it's the edge threshold (default 100, lower = more edges);
