@@ -1,0 +1,16 @@
+# Build output
+main
+main.exe
+*.o
+*.obj
+
+# Onnxruntime SDK vendorizzato (da scaricare, vedi README)
+onnxruntime/
+
+# Pacchetto release Windows pronto all'uso (va in GitHub Releases, non nel repo)
+windows/
+img-to-ascii-windows.zip
+
+# IDE / OS
+.vscode/
+.DS_Store
