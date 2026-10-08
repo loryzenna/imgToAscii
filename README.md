@@ -44,12 +44,14 @@ a U²-Netp network (the background disappears). Written in C, no dependency besi
 ## Usage
 
 ```
-main img [style] [columns] [edge threshold / shape contrast] [subject 1/0] [subject threshold 0..1]
+main [-c] [-f] img [style] [columns] [edge threshold / shape contrast] [subject 1/0] [subject threshold 0..1]
 ```
 
-- **style**: `simboli` (symbols, default), `teschio` (skull), `forme` (shapes), `bordi` (edges)
+- **-c**: color each character with the average color of the image under it (24-bit ANSI, any position)
+- **-f**: fill the terminal (width and height, keeping proportions, centered) and follow window resizes; ignores columns. When output is not a terminal it falls back to columns
+- **style**: `symbols` (default), `skull`, `shapes`, `edges`
 - **columns**: drawing width in characters (default 100)
-- **threshold/contrast**: for `bordi` it's the edge threshold (default 100, lower = more edges);
+- **threshold/contrast**: for `edges` it's the edge threshold (default 100, lower = more edges);
   for the other styles it's the contrast (default 2, higher = sharper edges)
 - **subject**: 1 = crop the subject (default), 0 = keep the whole image
 - **subject threshold**: mask threshold 0..1 (default 0.5)
@@ -57,13 +59,29 @@ main img [style] [columns] [edge threshold / shape contrast] [subject 1/0] [subj
 Examples:
 
 ```
-main cat.jpg teschio 80
-main cat.jpg bordi 100 100
-main cat.jpg simboli 60 3 0
-main cat.jpg teschio > drawing.txt
+main cat.jpg skull 80
+main cat.jpg edges 100 100
+main cat.jpg symbols 60 3 0
+main cat.jpg skull > drawing.txt
+main -c cat.jpg shapes 80
+main -c -f earth.gif
 ```
 
-Supported image formats: jpg, png, bmp, gif (including animated), tga, psd.
+Supported formats: jpg, png, bmp, gif (including animated), tga, psd built in; anything else ffmpeg can decode
+(mp4, webm, mov, webp, ...) if `ffmpeg` is in the PATH. Videos play at 15 fps, decoded at most 480 px wide,
+and are kept entirely in memory (about 1 MB per frame), so keep them short.
+
+## Code layout
+
+| File | What it does |
+|------|--------------|
+| `main.c` | arguments and the pipeline: load → subject → crop → luminance → render, plus the playback loop |
+| `load.c` | decodes the input: images and GIFs with stb_image, everything else through ffmpeg |
+| `subject.c` | U²-Netp subject mask (the only file that uses ONNX Runtime) |
+| `image.c` | pixel operations: crop to the subject, luminance with contrast stretch, resampling for `-f` |
+| `render.c` | picks a character per block (shape matching or Sobel edges) and prints it, with optional color |
+| `glyph.h` | measured shape of each ASCII character, used by `render.c` |
+| `term.c` | terminal size, ANSI setup on Windows, Ctrl+C cleanup |
 
 ## Build
 
