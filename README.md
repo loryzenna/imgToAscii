@@ -1,38 +1,74 @@
 # img-to-ascii
 
-Trasforma una foto (o un GIF animato) in disegno ASCII, ritagliando da solo il soggetto con
-una rete U²-Netp (lo sfondo sparisce). Scritto in C, nessuna dipendenza oltre ONNX Runtime.
-
-![demo](cat-dance.gif)
-
-## Uso
+Turns a photo (or an animated GIF) into ASCII art, automatically cropping out the subject with
+a U²-Netp network (the background disappears). Written in C, no dependency besides ONNX Runtime.
 
 ```
-main img [stile] [colonne] [soglia bordi / contrasto forme] [soggetto 1/0] [soglia soggetto 0..1]
+                                  %%%%%                           
+                         ###%%%%%%%%%%%%%%%%%%%                   
+                    %###%#%%#####%%%%%%%%%%%%%%%#%                
+                ###########**####%%%%%%%#####%%#%#%#%             
+              ##########%###%######%%%%#########%####%            
+            **######***##*#*########%%%%%##%##%%%%%%%%%%          
+          ****#***********#########%%%%%%#%##%#%%%%**##%%         
+        ##**=*#**********#######%%##%%%%%%%%%***%#%%#####         
+      #****++++****+*****###%#%%#%%%#+**####***#**#*.:==-+%       
+    #***++==**#*++**+++-+*%%%%%-:::..:=-*****=*%+*+:-:-::..:%     
+   ****++==++**+-*+*++==-*#%#:::::..::---*+*==+**%%#--=:-::--#%   
+  *+++++++=++*=+*=#*****+*%::-:-:-===-:::--++---*  .+*+=+==-+#%   
+ +++++++=+=++++=*+++++==+#-----==-++++-:::-++==+ . :.+*+=+++*#%   
+ +++++++==++**+*+++==-:=+##--.:::===+=----:++++= . ...#+-==+**%   
+*+++++++++++++****+*--:-+*#%-==:-: .--=-=+***+#  .....=#%##*++%%  
+*+++=+==++++*******++=.:-*#**%*==.  :=*%###%###  . .  :#*****+++* 
+*++=++==++**+**+***++=-::**###%##%%##*%##**#**#:   ....#*==*+***+%
+ +++==+=+==+-+*+****++--++***##**=+*+*#+=-=**##= .:==-==*****#***#
+ +++++++++********++==*+#+=+*#%*=#######*=+*++*%*::+==##%+*+++****
+ ***+=++*##**+++=-++++=+=-=++=#*#%######%##+*+=*#%##*######+%%%   
+  ***+=+****+++=.=+==++....-=**##++-++*####*##*#%%%%%%%%%%##%     
+   ***+=++*++===--*==-: . +**       .:+*=*+#*#%*#%%#%*%####%##%   
+    ***=+++++-:  :**  ..  =+**       :-=****+=**+##%#--+*.+%:*#%  
+     *++-*+*+=.    *=#+. .*++#-      :-=+*++=#=- *##:%#+%%=%%#+%% 
+     #++=**++**:-...****+==+++%       ===:.- # ##**#=#%*%%%#%#*%  
+      %***++***+---.:+**++*+***+..  .. ##.=#.+=*=%*-##-#++*=*#%   
+        ****#***++-.. +*++++++*+*  .   ++*:*%=+=:*+-*:=**#*+=-%   
+          =+****+*.:.  ++++=++***#--=:-.-..:-.=*=+#+*###%#####%   
+           #=---=+-::...+++++***+++*+*+******#*+**##*##%%%###%%   
+              =--:::... ++=+*********##*****##+*###%#%%#%%####%   
+                 =---::::==++******++**######++***###%%%%######%  
+                      ::::=+++*****+*+*#***#####%##%%#%#%######%  
+                         --=+*+*****+**#####*#****%#%##%##*++*#*% 
+                             #*=-:::-+********#%*#*#****+##****#  
+
 ```
 
-- **stile**: `simboli` (predefinito), `teschio`, `forme`, `bordi`
-- **colonne**: larghezza del disegno in caratteri (predefinito 100)
-- **soglia/contrasto**: per `bordi` è la soglia dei contorni (predefinito 100, più basso = più
-  contorni); per gli altri stili è il contrasto (predefinito 2, più alto = contorni più netti)
-- **soggetto**: 1 = ritaglia il soggetto (predefinito), 0 = tieni tutta l'immagine
-- **soglia soggetto**: soglia 0..1 della maschera (predefinito 0.5)
+## Usage
 
-Esempi:
+```
+main img [style] [columns] [edge threshold / shape contrast] [subject 1/0] [subject threshold 0..1]
+```
+
+- **style**: `simboli` (symbols, default), `teschio` (skull), `forme` (shapes), `bordi` (edges)
+- **columns**: drawing width in characters (default 100)
+- **threshold/contrast**: for `bordi` it's the edge threshold (default 100, lower = more edges);
+  for the other styles it's the contrast (default 2, higher = sharper edges)
+- **subject**: 1 = crop the subject (default), 0 = keep the whole image
+- **subject threshold**: mask threshold 0..1 (default 0.5)
+
+Examples:
 
 ```
 main cat.jpg teschio 80
 main cat.jpg bordi 100 100
 main cat.jpg simboli 60 3 0
-main cat.jpg teschio > disegno.txt
+main cat.jpg teschio > drawing.txt
 ```
 
-Formati di immagine supportati: jpg, png, bmp, gif (anche animati), tga, psd.
+Supported image formats: jpg, png, bmp, gif (including animated), tga, psd.
 
 ## Build
 
-Serve [ONNX Runtime](https://github.com/microsoft/onnxruntime/releases) e il modello
-[`u2netp.onnx`](https://github.com/danielgatis/rembg) nella cartella del progetto.
+You need [ONNX Runtime](https://github.com/microsoft/onnxruntime/releases) and the
+[`u2netp.onnx`](https://github.com/danielgatis/rembg) model in the project folder.
 
 ### macOS
 
@@ -43,16 +79,16 @@ make
 
 ### Windows (MinGW)
 
-Estrai `onnxruntime-win-x64-*.zip` in `./onnxruntime`, poi:
+Extract `onnxruntime-win-x64-*.zip` into `./onnxruntime`, then:
 
 ```
 make
 copy onnxruntime\lib\onnxruntime.dll .
 ```
 
-Il binario risultante richiede solo `onnxruntime.dll` e `u2netp.onnx` nella stessa cartella.
+The resulting binary only needs `onnxruntime.dll` and `u2netp.onnx` in the same folder.
 
-## Licenza
+## License
 
-Vedi `onnxruntime/LICENSE` per i termini di ONNX Runtime (non incluso in questo repo, va
-scaricato separatamente).
+See `onnxruntime/LICENSE` for the ONNX Runtime terms (not included in this repo, must be
+downloaded separately).
