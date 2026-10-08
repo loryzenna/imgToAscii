@@ -1,16 +1,21 @@
+# Linux: install onnxruntime
 # macOS: brew install onnxruntime
-# Windows (MinGW): extract onnxruntime-win-x64-*.zip into ./onnxruntime and copy onnxruntime\lib\onnxruntime.dll next to main.exe
-ifeq ($(OS),Windows_NT)
+# Windows (MinGW): estrai onnxruntime-win-x64-*.zip in ./onnxruntime e copia onnxruntime\lib\onnxruntime.dll accanto a main.exe
+ifeq ($(OS),Windows_NT) # Windows
 ORT = onnxruntime
 CC = gcc
-# -static: no MinGW DLLs, only onnxruntime.dll is left
+# -static: niente DLL di MinGW, resta solo onnxruntime.dll
 STATIC = -static
 else
+UNAME := $(shell uname -s)
+ifeq ($(UNAME),Darwin) # MacOs
 ORT = /opt/homebrew
 CC = clang
+else # Linux
+ORT = /usr
+CC ?= gcc
+endif
 endif
 
-SRC = main.c load.c subject.c image.c render.c term.c
-
-main: $(SRC) *.h
-	$(CC) -O2 -Wall $(SRC) -I$(ORT)/include -I$(ORT)/include/onnxruntime -L$(ORT)/lib -lonnxruntime -lm $(STATIC) -o main
+main: main.c stb_image.h
+	$(CC) -O2 main.c -I$(ORT)/include -I$(ORT)/include/onnxruntime -L$(ORT)/lib -lonnxruntime -lm $(STATIC) -o main
