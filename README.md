@@ -83,6 +83,13 @@ and are kept entirely in memory (about 1 MB per frame), so keep them short.
 | `glyph.h` | measured shape of each ASCII character, used by `render.c` |
 | `term.c` | terminal size, ANSI setup on Windows, Ctrl+C cleanup |
 
+## Download
+
+Prebuilt zips for Linux (x64), macOS (Apple Silicon) and Windows (x64) are in
+[Releases](https://github.com/loryzenna/imgToAscii/releases): unzip and run `main` from
+inside the folder (it looks for `u2netp.onnx` in the current directory).
+On macOS, the first time: `xattr -dr com.apple.quarantine img-to-ascii`.
+
 ## Dependencies
 
 You need [ONNX Runtime](https://github.com/microsoft/onnxruntime/releases) and the
@@ -93,6 +100,7 @@ You need [ONNX Runtime](https://github.com/microsoft/onnxruntime/releases) and t
 ### Linux
 
 ``` bash
+sudo apt install libonnxruntime-dev   # Debian/Ubuntu
 make
 ```
 

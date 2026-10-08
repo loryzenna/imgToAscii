@@ -1,0 +1,92 @@
+# Push a tag like v1.0.0: builds Linux, macOS and Windows and attaches the zips to the GitHub release
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+env:
+  ORT_VERSION: 1.23.2
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          curl -sSL -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v$ORT_VERSION/onnxruntime-linux-x64-$ORT_VERSION.tgz
+          mkdir onnxruntime && tar xzf ort.tgz -C onnxruntime --strip-components=1
+          # rpath $ORIGIN: libonnxruntime.so.1 is looked up next to the executable
+          make CC=gcc ORT=onnxruntime LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'"
+      - name: Package
+        run: |
+          mkdir img-to-ascii
+          cp main u2netp.onnx README.md img-to-ascii/
+          cp -L onnxruntime/lib/libonnxruntime.so.1 img-to-ascii/
+          zip -r img-to-ascii-linux-x64.zip img-to-ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: img-to-ascii-linux-x64.zip
+
+  macos:
+    runs-on: macos-latest                                # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          curl -sSL -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v$ORT_VERSION/onnxruntime-osx-arm64-$ORT_VERSION.tgz
+          mkdir onnxruntime && tar xzf ort.tgz -C onnxruntime --strip-components=1
+          make ORT=onnxruntime LDFLAGS="-Wl,-rpath,@executable_path"
+      - name: Package
+        run: |
+          mkdir img-to-ascii
+          cp main u2netp.onnx README.md img-to-ascii/
+          cp -L onnxruntime/lib/libonnxruntime.$ORT_VERSION.dylib img-to-ascii/
+          zip -r img-to-ascii-macos-arm64.zip img-to-ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: img-to-ascii-macos-arm64.zip
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc make zip unzip
+      - name: Build
+        run: |
+          curl -sSL -o ort.zip https://github.com/microsoft/onnxruntime/releases/download/v$ORT_VERSION/onnxruntime-win-x64-$ORT_VERSION.zip
+          unzip -q ort.zip && mv onnxruntime-win-x64-$ORT_VERSION onnxruntime
+          make
+      - name: Package
+        run: |
+          mkdir img-to-ascii
+          cp main.exe u2netp.onnx README.md img-to-ascii/
+          cp onnxruntime/lib/*.dll img-to-ascii/
+          zip -r img-to-ascii-windows-x64.zip img-to-ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: img-to-ascii-windows-x64.zip
+
+  release:
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: img-to-ascii-*.zip
+          generate_release_notes: true

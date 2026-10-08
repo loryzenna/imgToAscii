@@ -26,7 +26,7 @@ int term_size(int *cols, int *rows) {
 // Ctrl+C during the animation: show the cursor again before exiting
 static void restore_and_exit(int signal_number) {
     (void)signal_number;
-    write(1, "\033[0m\033[?25h\n", 11);               // reset the color too
+    if (write(1, "\033[0m\033[?25h\n", 11)) {}            // reset the color too
     _exit(0);
 }
 
